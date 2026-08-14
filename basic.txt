@@ -1,0 +1,3 @@
+// get big string , now we will chunk it so every chunk will have thier own embedding.
+// Then ChromaDB can search those individual chunks.
+

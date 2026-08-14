@@ -1,6 +1,8 @@
 const AskGemini = require("../services/gemini.service");
 const { extractText } = require("../services/pdf.service");
 const geminiClient = require("../config/gemini");
+const { chunkText } = require("../services/chunk.service");
+const { generateEmbedding } = require("../services/embedding.service");
 
 function getHome(req, res) {
   console.log("Home route");
@@ -31,22 +33,31 @@ async function uploadPDF(req, res) {
         .status(400)
         .json({ success: false, error: "No file uploaded" });
     }
+    // step 1: extract text 
     const pdfText = await extractText(req.file.path);
 
-     const embedding = await geminiClient.models.embedContent({
-        model: "gemini-3.6-flash",
-        content: pdfText
-    });
-    console.log(embedding)
-    const embeddingss = embedding.embeddings[0].values;
-    console.log('embeddings--', embeddingss, '--');
+    // step 2: chunk text
+    const chunks = await chunkText(pdfText, 1000);
+
+    // step: 3: generate embeddings
+    const results = [];
+    for (const chunk of chunks){
+      const embedding = await generateEmbedding(chunk);
+      results.push({
+        chunk,
+        embedding
+      })
+    }
 
     return res.status(200).json({
             success: true,
+            totalChars: pdfText.length,
+            totalChunks: results.length,
+            chunks,
             message: "PDF uploaded successfully.",
             originalName: req.file.originalname,
             extractedText: pdfText,
-            embeddings: embeddings
+            data: results
         });
     // return res.status(200).json({
     //   success: true,

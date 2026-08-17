@@ -3,6 +3,7 @@ const { extractText } = require("../services/pdf.service");
 const geminiClient = require("../config/gemini");
 const { chunkText } = require("../services/chunk.service");
 const { generateEmbedding } = require("../services/embedding.service");
+const {createCollection, storeEmbeddingsInChroma} = require("../services/chroma.service");
 
 function getHome(req, res) {
   console.log("Home route");
@@ -33,12 +34,13 @@ async function uploadPDF(req, res) {
         .status(400)
         .json({ success: false, error: "No file uploaded" });
     }
-    // step 1: extract text 
+    // step 1: extract text - parsing the pdf text
     const pdfText = await extractText(req.file.path);
-
+    
     // step 2: chunk text
-    const chunks = await chunkText(pdfText, 1000);
-
+    const chunks = await chunkText(pdfText, 1000); // 4000 => 4 chunk
+    console.log(chunks)
+    
     // step: 3: generate embeddings
     const results = [];
     for (const chunk of chunks){
@@ -49,16 +51,30 @@ async function uploadPDF(req, res) {
       })
     }
 
+    // step: 4- store info in chromaDb.
+
+    const collection = await createCollection();
+    await storeEmbeddingsInChroma(collection, results, req.file.filename)
+    const totalCount = await collection.count();
+    const storedData = await collection.get();
+
+    // {include: [
+    //     "documents",
+    //     "embeddings",
+    //     "metadatas"
+    // ]};
+    // console.log("Stored data in ChromaDB:", storedData);
+
     return res.status(200).json({
             success: true,
             totalChars: pdfText.length,
             totalChunks: results.length,
-            chunks,
-            message: "PDF uploaded successfully.",
+            message: "Pdf stored + chunked + embed gen + stored in db",
             originalName: req.file.originalname,
-            extractedText: pdfText,
-            data: results
-        });
+            data: results,
+            // totalCount
+    });
+    
     // return res.status(200).json({
     //   success: true,
     //   file: {
@@ -76,9 +92,31 @@ async function uploadPDF(req, res) {
   }
 }
 
+async function getStoredData (req, res){
+  try{
+    const collection = await createCollection();
+    const storedData = await collection.get({
+      include: [
+        "metadatas"
+      ]
+    });
+
+    return res.status(200).json({
+      message: "Information fetched successfully!",
+      data: storedData
+    })
+  }catch(err){
+    console.log(err);
+    return res.status(500).json({
+      message: "Error fetching stored data"
+    });
+  }
+  
+}
 
 module.exports = {
   getHome,
   generateContent,
   uploadPDF,
+  getStoredData
 };

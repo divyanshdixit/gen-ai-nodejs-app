@@ -6,9 +6,7 @@ async function generateEmbedding(text) {
         model: "gemini-embedding-001",
         contents: text
     });
-    console.log(response)
     const embeddingss = response.embeddings[0].values;
-    console.log('embeddings--', embeddingss, '--');
     return embeddingss;
 
 }

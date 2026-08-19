@@ -43,7 +43,16 @@ async function storeEmbeddingsInChroma(collection, results, fileName) {
     })
 }
 
+async function searchSimilarChunks(collection, questionEmbedding, topK=3) {
+    const result = await collection.query({
+      queryEmbeddings: [questionEmbedding], //search for similar embeddings
+      nResults: topK // return top K similar chunks
+    });
+    return result;
+}
+
 module.exports = {
     createCollection,
-    storeEmbeddingsInChroma
+    storeEmbeddingsInChroma,
+    searchSimilarChunks
 };

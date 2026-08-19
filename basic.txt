@@ -2,3 +2,12 @@
 // Then ChromaDB can search those individual chunks.
 
 npx chroma run --path ./getting-started
+https://github.com/divyanshdixit/gen-ai-nodejs-app
+
+When we call collection.add(),  ChromaDB doesn't simply append everything to an array.  
+ChromaDB updates or builds its internal vector index.
+
+it organizes vectors into a structure,  optimized for nearest-neighbor search using 
+alogrithms (HNSW or ANN implementation) - Approximate Nearest Neighbor (ANN) indexing.
+The vectors are organized so ChromaDB can quickly find nearby vectors without checking 
+every single one. ChromaDB searches across all indexed vectors.

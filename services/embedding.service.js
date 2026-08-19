@@ -2,7 +2,7 @@ const geminiClient = require("../config/gemini");
 
 async function generateEmbedding(text) {
     
-     const response = await geminiClient.models.embedContent({
+    const response = await geminiClient.models.embedContent({
         model: "gemini-embedding-001",
         contents: text
     });

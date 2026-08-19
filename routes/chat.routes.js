@@ -6,5 +6,6 @@ const router = express.Router();
 
 router.get('/', chat.getHome);
 router.post('/generate', chat.generateContent);
+router.post('/ask', chat.askQuestion);
 
 module.exports = router;

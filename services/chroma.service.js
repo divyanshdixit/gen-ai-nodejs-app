@@ -42,7 +42,7 @@ async function storeEmbeddingsInChroma(collection, results, fileName) {
         metadatas
     })
 }
-
+// getting the similar data
 async function searchSimilarChunks(collection, questionEmbedding, topK=3) {
     const result = await collection.query({
       queryEmbeddings: [questionEmbedding], //search for similar embeddings

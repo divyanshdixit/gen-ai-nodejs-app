@@ -1,4 +1,4 @@
-const AskGemini = require("../services/gemini.service");
+const {AskGemini, generateStreamingAnswer} = require("../services/gemini.service");
 const { extractText } = require("../services/pdf.service");
 const geminiClient = require("../config/gemini");
 const { chunkText } = require("../services/chunk.service");
@@ -134,15 +134,31 @@ async function askQuestion(req, res) {
     const prompt = buildPrompt(question, result.documents[0]);
 
     // now ask gemini with the prompt and return the answer:
-    const answer = await AskGemini(prompt);
+    // const answer = await AskGemini(prompt); 
 
-    return res.status(200).json({
-      success: true,
-      data: result,
-      prompt,
-      answer,
-      sources: result.metadatas[0]
-    })
+    // you will get streaming answer. 
+    const streamingAnswer = await generateStreamingAnswer(prompt); 
+
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Transfer-Encoding', 'chunked');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    for await (const chunk of streamingAnswer){
+      const text = chunk.text;
+      res.write(text);
+    }
+
+    res.end();
+
+    // return res.status(200).json({
+    //   success: true,
+    //   data: result,
+    //   prompt,
+    //   answer,
+    //   sources: result.metadatas[0]
+    // })
   }catch(err){
     console.error("Error asking question:", err);
     return res.status(500).json({ error: "Failed to process question" });

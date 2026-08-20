@@ -10,4 +10,16 @@ async function AskGemini(message) {
   return response.text;
 }
 
-module.exports = AskGemini;
+async function generateStreamingAnswer(prompt){
+  const stream = await geminiClient.models.generateContentStream({ // chunk1 - 1.5secs
+    model: "gemini-3.5-flash-lite",
+    contents: prompt,
+  })
+
+  return stream;
+}
+
+module.exports = {
+  AskGemini,
+  generateStreamingAnswer
+};
